@@ -13,12 +13,6 @@ This module implements a CoAp Server and Client.
 
 from network import WLAN
 from network import Coap
-import _thread
-
-# Thread handling the CoAp Server
-def coap_thread():
-    while True:
-        Coap.read()
 
 # Connect to the network
 wlan = WLAN(mode=WLAN.STA)
@@ -32,9 +26,6 @@ r = Coap.add_resource("resource1", media_type=Coap.MEDIATYPE_TEXT_PLAIN, value="
 # Configure the possible operations on the resource
 r.callback(Coap.REQUEST_GET | Coap.REQUEST_POST | Coap.REQUEST_PUT, True)
 
-# Start a new thread which handles the CoAp Server
-_thread.start_new_thread(coap_thread, ())
-
 ```
 
 ## Usage Example of CoAp Client
@@ -43,7 +34,6 @@ _thread.start_new_thread(coap_thread, ())
 
 from network import WLAN
 from network import Coap
-import _thread
 
 # Callback handling the responses to the requests sent to a Coap Server
 def response_callback(code, id_param, type_param, token, payload):
@@ -53,11 +43,6 @@ def response_callback(code, id_param, type_param, token, payload):
     print("Type: {}".format(type_param))
     print("Token: {}".format(token))
     print("Payload: {}".format(payload))
-
-# Thread handling the sockets
-def coap_thread():
-    while True:
-        Coap.read()
 
 # Connect to the network
 wlan = WLAN(mode=WLAN.STA)
@@ -70,9 +55,6 @@ Coap.init(str(wlan.ifconfig()[0]))
 Coap.register_response_handler(response_callback)
 # Create a new Client Session to use to communicate with the CoAp Server
 session = Coap.new_client_session("server-ip-address")
-
-# Start a new thread which calls Coap.read() to handle incoming requests
-_thread.start_new_thread(coap_thread, ())
 
 # Send a GET Request to the CoAp Server asking for all resources via URI ".well-known/core"
 id = session.send_request(Coap.REQUEST_GET, uri_path=".well-known/core")
@@ -131,16 +113,6 @@ Removes the resource defined by the `uri` argument.
 Returns with the resource defined by `uri` argument.
 
 * `uri` is the full path of the resource to be returned.
-
-#### Coap.read(timeout=0)
-
-Must be called peridically to process any incoming CoAp packets.
-
-* `timeout` is a timeout value in milliseconds. If not set or value 0 is passed the call will be blocked forever or until a new CoAp packet arrives on the CoAp Server (if any) or on the already registered CoAp Client Sessions (if any). If the value is given it returns after the defined timeout or when a new CoAp packet arrives to the CoAp Server (if any) or to the already registered CoAp Client Sessions (if any).
-
-{{% hint style="info" %}}
-Coap.read() is only aware of the CoAp Client Sessions created before the actual Coap.read() is called. If the `timeout` is not specified or 0, it is not safe to create additional CoAp Client Sessions after the first call to Coap.read() as it may happen that no CoAp packets arrives to the CoAp Server or to the already created CoAp Client Sessions thus the newly created CoAp Client Session will not be served as the current Coap.read() will never return.
-{{% /hint %}}
 
 #### Coap.register_response_handler(callback)
 
